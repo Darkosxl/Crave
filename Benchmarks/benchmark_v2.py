@@ -22,7 +22,7 @@ def parse_args() -> ArgumentParser:
     parser.add_argument("--testset_path", type=str, default="decompile_eval.json")
     parser.add_argument("--repeat", type=int, default=1)
     parser.add_argument("--models_path", type=str, default="llms.txt")
-    parser.add_argument("--output_path", type=str, default="/results/")
+    parser.add_argument("--output_path", type=str, default="results.json")
     
     return parser.parse_args()
     
@@ -108,7 +108,7 @@ def decompile_pass_rate(models, testsets, gen_results_repeat, opts, args):
                 {
                     "c_func": testset["c_func"],
                     "c_test": testset["c_test"],
-                    "c_func_decompile": output[0],
+                    "c_func_decompile": output,
                 }
                 for testset, output in zip(testsets, gen_results)
             ]
@@ -199,6 +199,8 @@ def run_eval_pipeline(args: ArgumentParser) -> int:
                     gen_results = completions.choices[0].message.content
                     gen_results_repeat[0].append(gen_results)
                     gen_results_repeat[1].append(model)
+                if tc_idx % 100 == 0:
+                    logger.info(f"[{model}] {tc_idx}/{len(testsets)} sample:\nINPUT: {prompt[:300]}\nOUTPUT: {gen_results[:300]}")
                 logger.info(f"[{model}] {tc_idx}/{len(testsets)} test cases done")
                 
     except Exception as e:
@@ -207,7 +209,7 @@ def run_eval_pipeline(args: ArgumentParser) -> int:
         return 1
     save_data = []
     for testset, res in zip(testsets, gen_results_repeat[0]):
-        testset["output"] = res[0]
+        testset["output"] = res
         save_data.append(testset)
     
     if args.output_path:
