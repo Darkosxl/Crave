@@ -1,0 +1,4 @@
+# novita/qwen/qwen3.5-35b-a3b:bf16
+#novita/qwen/qwen3.5-27b:bf16
+#novita/qwen/qwen3.5-9b:bf16
+#mistralai/devstral-small
