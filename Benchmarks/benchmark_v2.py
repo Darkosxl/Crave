@@ -188,7 +188,7 @@ def run_eval_pipeline(args: ArgumentParser) -> int:
         models = open(args.models_path).read().splitlines()
         gen_results_repeat = [[],[]]
         for model in models:
-            for testset in testsets:
+            for tc_idx, testset in enumerate(testsets, 1):
                 input_asm_prompt = testset["input_asm_prompt"]
                 opt = testset["type"]
                 prompt = opts[opt] + input_asm_prompt + after
@@ -199,9 +199,10 @@ def run_eval_pipeline(args: ArgumentParser) -> int:
                     gen_results = completions.choices[0].message.content
                     gen_results_repeat[0].append(gen_results)
                     gen_results_repeat[1].append(model)
+                logger.info(f"[{model}] {tc_idx}/{len(testsets)} test cases done")
                 
     except Exception as e:
-        logger.error(e)
+        logger.error(f"Pipeline failed at model={model}, test_case={tc_idx}/{len(testsets)}: {e}")
         traceback.print_exc()
         return 1
     save_data = []
@@ -212,6 +213,7 @@ def run_eval_pipeline(args: ArgumentParser) -> int:
     if args.output_path:
         with open(args.output_path, "w") as f:
             json.dump(save_data, f, indent=4, ensure_ascii=True)
+        logger.info(f"Results saved to {args.output_path} ({len(save_data)} entries)")
     ret = decompile_pass_rate(models, testsets, gen_results_repeat, opts, args)
     return ret
     
